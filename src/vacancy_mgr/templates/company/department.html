@@ -1,0 +1,95 @@
+{% extends 'vacancy_mgr/base.html' %}
+{% load static %}
+{% load humanize %}
+
+    {% block head_title %}部署情報 {{department.department_name}}{% endblock %}
+    {% block head %}
+        <link rel="stylesheet" href="{% static 'company/css/style.css' %}">
+    {% endblock %}
+
+    {% block page_top %}{% endblock %}
+
+    {% block header %}{% endblock %}
+
+    {% block h1_title %}【部署情報】 {{ department.department_name }}{% endblock %}
+
+    {% block contents %}
+        <div id="data-form">
+        {% if back_url %}
+            <form action="{% url 'company_department' department.idb64 %}?back_url={{ escaped_back_url }}" method="post" enctype="multipart/form-data">
+        {% else %}
+            <form action="{% url 'company_department' department.idb64 %}" method="post" enctype="multipart/form-data">
+        {% endif %}
+                {% csrf_token %}
+                {% if form.errors %}
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <p>*&nbsp;{{ field.label }} : {{ error }}</p>
+                        {% endfor %}
+                     {% endfor %}
+                {% endif %}
+                <div class="row py-1">
+                    <div class="col col-3 col-md-2 col-form-label text-end"><label>部署ID</label></div>
+                    <div class="col col-auto col-form-label text-end">{{ department.id }}</div>
+                </div>
+                <div class="row py-1">
+                    <div class="col col-3 col-md-2 col-form-label text-end"><label>{{form.department_name.label}}</label></div>
+                    <div class="col col-auto">{{ form.department_name }}</div>
+                </div>
+                <div class="row py-1">
+                    <div class="col col-3 col-md-2 col-form-label text-end"><label>{{ form.priority.label }}</label></div>
+                    <div class="col col-auto">{{ form.priority }}</div>
+                    <div class="col col-auto col-form-label text-center">{{ form.is_publish_vacancy }}<label class="form-check-label">{{form.is_publish_vacancy.label}}</label></div>
+                </div>
+                <div class="row py-1">
+                    <div class="col col-3 col-md-2 col-form-label text-end"><label>{{form.postal_code.label}}</label></div>
+                    <div class="col col-auto">{{ form.postal_code }}</div>
+                </div>
+                <div class="row py-1">
+                    <div class="col col-3 col-md-2 col-form-label text-end"><label>{{form.address.label}}</label></div>
+                    <div class="col container-fluid">{{ form.address }}</div>
+                </div>
+                <div class="row py-1">
+                    <div class="col col-3 col-md-2 col-form-label text-end"><label>{{form.tel.label}}</label></div>
+                    <div class="col col-auto">{{ form.tel }}</div>
+                    <div class="col col-auto col-form-label text-end"><label>{{form.fax.label}}</label></div>
+                    <div class="col col-auto">{{ form.fax }}</div>
+                </div>
+                <div class="row py-1">
+                    <div class="col col-3 col-md-2 col-form-label text-end"><label>{{form.mail.label}}</label></div>
+                    <div class="col container-fluid">{{ form.mail }}</div>
+                </div>
+                <div class="row py-1">
+                    <div class="col col-3 col-md-2 col-form-label text-end"><label>{{form.note.label}}</label></div>
+                    <div class="col container-fluid">{{ form.note }}</div>
+                </div>
+                <div class="row py-1">
+                    <div class="col col-3 col-md-2 col-form-label text-end"><label>停止 / 削除</label></div>
+                    <div class="col col-auto col-form-label text-center">{{ form.is_stopped }}<label class="form-check-label">{{form.is_stopped.label}}</label></div>
+                    <div class="col col-auto col-form-label text-center">{{ form.is_deleted }}<label class="form-check-label">{{form.is_deleted.label}}</label></div>
+                </div>
+                <div class="row py-1">
+                    <div class="col col-3 col-md-2 col-form-label text-end"><label>登録日時</label></div>
+                    <div class="col col-auto col-form-label text-end">{{ department.created_at }}</div>
+                </div>
+                <div class="row py-3">
+                    <div class="col col-2"></div>
+                    <div class="col col-4">
+                        <input type="submit" value="保存" class="btn d-block mx-auto d-flex align-items-center btn-primary">
+                    </div>
+                    <div class="col col-4">
+                    {% if back_url %}
+                        <a href="{{ back_url }}" class="btn btn-secondary">戻る</a>
+                    {% else %}
+                        <input type="button" value="閉じる" onclick="window.close();" class="btn d-block mx-auto d-flex align-items-center btn-secondary">
+                    {% endif %}
+                    </div>
+                    <div class="col col-2"></div>
+                </div>
+            </form>
+        </div>
+    {% endblock %}
+
+    {% block footer %}{% endblock %}
+
+    {% block page_bottom %}{% endblock %}

@@ -1,0 +1,103 @@
+services:
+  # データベースのコンテナ
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: yworks
+      POSTGRES_PASSWORD: sXP_Rxk4w$
+      POSTGRES_DB: rent_db
+      TZ: Asia/Tokyo
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./init-sql:/init-sql
+      - postgres_data:/var/lib/postgresql/data
+
+  # 1. VasyworksDB (Model)
+  vacancy_model:
+    build: .
+    working_dir: /home/web/html/vacancy_model
+    environment:
+      - DJANGO_SUPERUSER_PASSWORD=root1234
+    command: >
+      bash -c "
+      sleep 5 &&
+      python manage.py migrate &&
+      python manage.py createsuperuser --noinput --username root --email admin@example.com || true &&
+      python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - ./src:/home/web/html
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+
+  # 2. VasyworksMGR (Manager)
+  vacancy_mgr:
+    build: .
+    working_dir: /home/web/html/vacancy_mgr
+    command: python manage.py runserver 0.0.0.0:8001
+    volumes:
+      - ./src:/home/web/html
+      - ./vacancy_data/media:/home/web/html/vacancy_mgr/media
+      
+    ports:
+      - "8001:8001"
+    depends_on:
+      - db
+
+  # 3. VasyworksLIST (一覧画面 ※フォルダ名は vacancy)
+  vacancy:
+    build: .
+    working_dir: /home/web/html/vacancy
+    command: python manage.py runserver 0.0.0.0:8002
+    volumes:
+      - ./src:/home/web/html
+      - ./vacancy_data/media:/home/web/html/vacancy/media
+    ports:
+      - "8002:8002"
+    depends_on:
+      - db
+
+  # 4. VasyworksAPI
+  vacancy_api:
+    build: .
+    working_dir: /home/web/html/vacancy_api
+    command: python manage.py runserver 0.0.0.0:8003
+    volumes:
+      - ./src:/home/web/html
+      - ./vacancy_data/media:/home/web/html/vacancy_api/media
+    ports:
+      - "8003:8003"
+    depends_on:
+      - db
+
+  # 5. VasyworksSEARCH
+  vacancy_search:
+    build: .
+    working_dir: /home/web/html/vacancy_search
+    command: python manage.py runserver 0.0.0.0:8004
+    volumes:
+      - ./src:/home/web/html
+      - ./vacancy_data/media:/home/web/html/vacancy_search/media
+    ports:
+      - "8004:8004"
+    depends_on:
+      - db
+
+  # テストデータ自動投入用コンテナ
+  data_seeder:
+    image: postgres:16
+    depends_on:
+      - vacancy_model
+    volumes:
+      - ./init-sql:/init-sql
+    environment:
+      PGPASSWORD: sXP_Rxk4w$
+    command: >
+      bash -c "
+      sleep 15 &&
+      psql -h db -U yworks -d rent_db -f /init-sql/prepare_test_data.sql"
+
+volumes:
+  postgres_data:

@@ -1,0 +1,169 @@
+{% extends 'vacancy_mgr/base.html' %}
+{% load static %}
+{% load humanize %}
+
+    {% block head_title %}会社情報 {{company.company_name}}{% endblock %}
+    {% block head %}
+        <link rel="stylesheet" href="{% static 'company/css/style.css' %}">
+    {% endblock %}
+
+    {% block page_top %}{% endblock %}
+
+    {% block header %}{% endblock %}
+
+    {% block h1_title %}【会社情報】 {{ company.company_name }}{% endblock %}
+
+    {% block contents %}
+        <div id="data-form">
+            <form action="{% url 'company_index' %}" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                {% if form.errors %}
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <p>*&nbsp;{{ field.label }} : {{ error }}</p>
+                        {% endfor %}
+                     {% endfor %}
+                {% endif %}
+                <div class="row py-1">
+                    <div class="col col-3 col-md-2 col-form-label text-end"><label>{{form.company_name.label}}</label></div>
+                    <div class="col col-auto">{{ form.company_name }}</div>
+                </div>
+                <div class="row py-1">
+                    <div class="col col-3 col-md-2 col-form-label text-end"><label>{{form.company_kana.label}}</label></div>
+                    <div class="col col-auto">{{ form.company_kana }}</div>
+                </div>
+                <div class="row py-1">
+                    <div class="col col-3 col-md-2 col-form-label text-end"><label>{{form.shop_name.label}}</label></div>
+                    <div class="col col-auto">{{ form.shop_name }}</div>
+                </div>
+                <div class="row py-1">
+                    <div class="col col-3 col-md-2 col-form-label text-end"><label>{{form.api_key.label}}</label></div>
+                    <div class="col col-auto">
+                        <div class="row">
+                            <div class="col col-auto col-form-label">[[ apiKey ]]</div>
+                            <div class="col col-auto">{{ form.api_key }}</div>
+                            <div class="col col-auto">
+                                <input type="button" value="変更" v-on:click="openChangeApiKeyModal($event)" class="btn d-block d-flex align-items-center btn-danger">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row py-1">
+                    <div class="col col-3 col-md-2 col-form-label text-end"><label>{{form.internal_api_key.label}}</label></div>
+                    <div class="col col-auto">
+                        <div class="row">
+                            <div class="col col-auto col-form-label">[[ internalApiKey ]]</div>
+                            <div class="col col-auto">{{ form.internal_api_key }}</div>
+                            <div class="col col-auto">
+                                <input type="button" value="変更" v-on:click="openChangeInternalApiKeyModal($event)" class="btn d-block d-flex align-items-center btn-danger">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row py-1">
+                    <div class="col col-3 col-md-2 col-form-label text-end"><label>{{form.postal_code.label}}</label></div>
+                    <div class="col col-auto">{{ form.postal_code }}</div>
+                </div>
+                <div class="row py-1">
+                    <div class="col col-3 col-md-2 col-form-label text-end"><label>{{form.address.label}}</label></div>
+                    <div class="col container-fluid">{{ form.address }}</div>
+                </div>
+                <div class="row py-1">
+                    <div class="col col-3 col-md-2 col-form-label text-end"><label>{{form.tel.label}}</label></div>
+                    <div class="col col-auto">{{ form.tel }}</div>
+                    <div class="col col-auto col-form-label text-end"><label>{{form.fax.label}}</label></div>
+                    <div class="col col-auto">{{ form.fax }}</div>
+                </div>
+                <div class="row py-1">
+                    <div class="col col-3 col-md-2 col-form-label text-end"><label>{{form.mail.label}}</label></div>
+                    <div class="col container-fluid">{{ form.mail }}</div>
+                </div>
+                <div class="row py-1">
+                    <div class="col col-3 col-md-2 col-form-label text-end"><label>{{form.agency_no.label}}</label></div>
+                    <div class="col col-auto">{{ form.agency_no }}</div>
+                    <div class="col col-auto col-form-label text-end"><label>{{form.pm_no.label}}</label></div>
+                    <div class="col col-auto">{{ form.pm_no }}</div>
+                </div>
+                <div class="row py-1">
+                    <div class="col col-3 col-md-2 col-form-label text-end"><label>{{form.water_mark.label}}</label></div>
+                    <div class="col container-fluid">{{ form.water_mark }}</div>
+                </div>
+                <div class="row py-3">
+                    <div class="col col-2"></div>
+                    <div class="col col-4">
+                        <input type="submit" value="保存" class="btn d-block mx-auto d-flex align-items-center btn-primary">
+                    </div>
+                    <div class="col col-4">
+                        <input type="button" value="閉じる" onclick="window.close();" class="btn d-block mx-auto d-flex align-items-center btn-secondary">
+                    </div>
+                    <div class="col col-2"></div>
+                </div>
+            </form>
+
+            <modal name="change-api-key" :draggable="true" :resizable="true" :width="400" :height="300">
+                <div class="modal-header">
+                    <h2>APIキーの変更</h2>
+                </div>
+                <div class="modal-body">
+                    <p>APIキーを変更します。</p>
+                    <p>※ 変更の確定には会社情報の保存が必要です。</p>
+                    <p>※ 変更後は利用中のAPI呼び出しのAPIキーの変更が必要となります。</p>
+                </div>
+                <div>
+                    <div class="row">
+                        <div class="col col-2"></div>
+                        <div class="col col-4">
+                            <button v-on:click="okCloseChangeApiKeyModal" class="btn d-block mx-auto d-flex align-items-center btn-danger">OK</button>
+                        </div>
+                        <div class="col col-4">
+                            <button v-on:click="cancelCloseChangeApiKeyModal" class="btn d-block mx-auto d-flex align-items-center btn-secondary">キャンセル</button>
+                        </div>
+                        <div class="col col-2"></div>
+                    </div>
+                </div>
+            </modal>
+
+            <modal name="change-internal-api-key" :draggable="true" :resizable="true" :width="400" :height="300">
+                <div class="modal-header">
+                    <h2>内部APIキーの変更</h2>
+                </div>
+                <div class="modal-body">
+                    <p>登録システム用の内部APIキーを変更します。</p>
+                    <p>※ 変更の確定には会社情報の保存が必要です。</p>
+                </div>
+                <div>
+                    <div class="row">
+                        <div class="col col-2"></div>
+                        <div class="col col-4">
+                            <button v-on:click="okCloseChangeInternalApiKeyModal" class="btn d-block mx-auto d-flex align-items-center btn-danger">OK</button>
+                        </div>
+                        <div class="col col-4">
+                            <button v-on:click="cancelCloseChangeInternalApiKeyModal" class="btn d-block mx-auto d-flex align-items-center btn-secondary">キャンセル</button>
+                        </div>
+                        <div class="col col-2"></div>
+                    </div>
+                </div>
+            </modal>
+        </div>
+    {% endblock %}
+
+    {% block footer %}
+        <div id="move-top">
+            <a href="#page-top"><img src="{% static '/vacancy_mgr/images/arrow_top.png' %}" alt="move top"></a>
+        </div>
+        <div id="move-bottom">
+            <a href="#page-bottom"><img src="{% static '/vacancy_mgr/images/arrow_bottom.png' %}" alt="move bottom"></a>
+        </div>
+    {% endblock %}
+
+    {% block page_bottom %}
+        <script type="text/javascript" src="{% static 'company/js/company.js' %}"></script>
+        <script type="text/javascript">
+            var app = createCompanyVue(
+                "{{ api_key }}",
+                "{{ company.api_key | default_if_none:'' }}",
+                "{{ company.internal_api_key | default_if_none:'' }}",
+            );
+        </script>
+    {% endblock %}
+

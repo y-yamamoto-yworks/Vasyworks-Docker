@@ -1,0 +1,55 @@
+{% extends 'vacancy/base.html' %}
+{% load static %}
+{% load humanize %}
+
+    {% block head_title %}非居住用物件 空室一覧：{{ company.company_name | default_if_none:'' }}{% endblock %}
+    {% block head %}
+        <link rel="stylesheet" href="{% static 'building/css/style.css' %}">
+    {% endblock %}
+
+    {% block header %}{% endblock %}
+
+    {% block h1_title %}非居住用物件 空室一覧：{{ company.company_name | default_if_none:'' }}{% endblock %}
+
+    {% block contents %}
+        <div id="search-conditions-form">
+            <form action="" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="row py-1 justify-content-center">
+                    <div class="col col-auto col-form-label text-end"><label>エリア</label></div>
+                    <div class="col col-auto">{{ form.pref }}</div>
+                    <div class="col col-auto">{{ form.city }}</div>
+                    <div class="col col-auto">{{ form.area }}</div>
+                </div>
+                <div class="row py-1 justify-content-center">
+                    <div class="col col-auto">
+                        <input type="submit" value="検索" class="btn btn-primary">
+                    </div>
+                    <div class="col col-auto">
+                        <input type="submit" value="クリア" v-on:click="clearConditions($event)" class="btn btn-secondary">
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div id="building-list">
+        {% if buildings|length > 0 %}
+            {% include 'building/includes/non_residential_pagination.html' %}
+            {% include 'building/includes/building_list.html' %}
+            {% include 'building/includes/non_residential_pagination.html' %}
+        {% else %}
+            <p class="no-buildings">該当する建物がありません。</p>
+        {% endif %}
+    {% endblock %}
+
+    {% block footer %}
+        <script type="text/javascript" src="{% static 'building/js/search_area.js' %}"></script>
+        <script type="text/javascript">
+            var searchApp = createSearchAreaVue(
+                "{{ api_key }}",
+                "{% if default_pref_id %}{{ default_pref_id }}{% else %}0{% endif %}",
+                "{% if default_city_id %}{{ default_city_id }}{% else %}0{% endif %}",
+                "{% if default_area_id %}{{ default_area_id }}{% else %}0{% endif %}"
+            );
+        </script>
+    {% endblock %}

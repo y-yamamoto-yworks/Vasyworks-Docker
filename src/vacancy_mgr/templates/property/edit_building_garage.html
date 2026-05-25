@@ -1,0 +1,137 @@
+{% extends 'vacancy_mgr/base.html' %}
+{% load static %}
+{% load humanize %}
+
+    {% block head_title %}駐車場 {{ data.garagea_name }} {{ data.building.building_name }} {% endblock %}
+    {% block head %}
+        <link rel="stylesheet" href="{% static 'property/css/style.css' %}">
+        <link rel="stylesheet" href="{% static 'property/css/style_ids.css' %}">
+    {% endblock %}
+
+    {% block page_top %}{% endblock %}
+
+    {% block header %}{% endblock %}
+
+    {% block h1_title %}【駐車場】{{ data.building.building_name }}{% endblock %}
+
+    {% block contents %}
+        <div id="data-form">
+        {% if back_url %}
+            <form action="{% url 'property_edit_building_garage'  data.building.oid data.id %}?back_url={{ escaped_back_url }}" method="post" enctype="multipart/form-data">
+        {% else %}
+            <form action="{% url 'property_edit_building_garage'  data.building.oid data.id %}" method="post" enctype="multipart/form-data">
+        {% endif %}
+                {% csrf_token %}
+                {% if form.errors %}
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <p>*&nbsp;{{ field.label }} : {{ error }}</p>
+                        {% endfor %}
+                     {% endfor %}
+                {% endif %}
+                <div class="row py-1">
+                    <div class="col col-2 col-form-label text-end"><label class="float-right">駐車場名:</label></div>
+                    <div class="col container-fluid">{{ form.garage_name }}</div>
+                </div>
+                <div class="row py-1">
+                    <div class="col col-2 col-form-label text-end"><label class="float-right">空き状況:</label></div>
+                    <div class="col col-auto">{{ form.garage_status }}</div>
+                    <div class="col col-auto pt-2"><label>外部貸し可:</label>{{ form.allow_no_room }}</div>
+                </div>
+                <div class="row py-1">
+                    <div class="col col-2 col-form-label text-end"><label>優先順:</label></div>
+                    <div class="col col-auto">{{ form.priority }}</div>
+                </div>
+                <div class="row py-1">
+                    <div class="col col-2 col-form-label text-end"><label>月額:</label></div>
+                    <div class="col col-auto">{{ form.garage_fee }}</div>
+                    <div class="col col-auto col-form-label text-start"><span>円</span></div>
+                    <div class="col col-auto col-form-label text-end"><label>税区分:</label></div>
+                    <div class="col col-auto">{{ form.garage_fee_tax_type }}</div>
+                </div>
+                <div class="row py-1">
+                    <div class="col col-2 col-form-label text-end"><label>手数料:</label></div>
+                    <div class="col col-auto">{{ form.garage_charge }}</div>
+                    <div class="col col-auto col-form-label text-start"><span>円</span></div>
+                    <div class="col col-auto col-form-label text-end"><label>税区分:</label></div>
+                    <div class="col col-auto">{{ form.garage_charge_tax_type }}</div>
+                </div>
+                <div class="row py-1">
+                    <div class="col col-2 col-form-label text-end"><label>保証料:</label></div>
+                    <div class="col col-auto">{{ form.garage_deposit }}</div>
+                    <div class="col col-auto col-form-label text-start"><span>円</span></div>
+                    <div class="col col-auto col-form-label text-end"><label>税区分:</label></div>
+                    <div class="col col-auto">{{ form.garage_deposit_tax_type }}</div>
+                </div>
+                <div class="row py-1">
+                    <div class="col col-2 col-form-label text-end"><label>車庫証明費用:</label></div>
+                    <div class="col col-auto">{{ form.certification_fee }}</div>
+                    <div class="col col-auto col-form-label text-start"><span>円</span></div>
+                    <div class="col col-auto col-form-label text-end"><label>税区分:</label></div>
+                    <div class="col col-auto">{{ form.certification_fee_tax_type }}</div>
+                </div>
+                <div class="row py-1">
+                    <div class="col col-2 col-form-label text-end"><label>初期費用1:</label></div>
+                    <div class="col col-auto">{{ form.initial_cost_name1 }}</div>
+                    <div class="col col-auto">{{ form.initial_cost1 }}</div>
+                    <div class="col col-auto col-form-label text-start"><span>円</span></div>
+                    <div class="col col-auto col-form-label text-end"><label>税区分:</label></div>
+                    <div class="col col-auto">{{ form.initial_cost_tax_type1 }}</div>
+                </div>
+                <div class="row py-1">
+                    <div class="col col-2 col-form-label text-end"><label>初期費用2:</label></div>
+                    <div class="col col-auto">{{ form.initial_cost_name2 }}</div>
+                    <div class="col col-auto">{{ form.initial_cost2 }}</div>
+                    <div class="col col-auto col-form-label text-start"><span>円</span></div>
+                    <div class="col col-auto col-form-label text-end"><label>税区分:</label></div>
+                    <div class="col col-auto">{{ form.initial_cost_tax_type2}}</div>
+                </div>
+                <div class="row py-1">
+                    <div class="col col-2 col-form-label text-end"><label>初期費用3:</label></div>
+                    <div class="col col-auto">{{ form.initial_cost_name3 }}</div>
+                    <div class="col col-auto">{{ form.initial_cost3 }}</div>
+                    <div class="col col-auto col-form-label text-start"><span>円</span></div>
+                    <div class="col col-auto col-form-label text-end"><label>税区分:</label></div>
+                    <div class="col col-auto">{{ form.initial_cost_tax_type3 }}</div>
+                </div>
+                <div class="row py-1">
+                    <div class="col col-2 col-form-label text-end"><label>サイズ:</label></div>
+                    <div class="col col-auto col-form-label"><span>幅:</span></div>
+                    <div class="col col-auto">{{ form.width }}</div>
+                    <div class="col col-auto col-form-label text-start"><span>m</span></div>
+                    <div class="col col-auto col-form-label"><span>奥行き:</span></div>
+                    <div class="col col-auto">{{ form.length }}</div>
+                    <div class="col col-auto col-form-label text-start"><span>m</span></div>
+                    <div class="col col-auto col-form-label"><span>高さ:</span></div>
+                    <div class="col col-auto">{{ form.height }}</div>
+                    <div class="col col-auto col-form-label text-start"><span>m</span></div>
+                </div>
+                <div class="row py-1">
+                    <div class="col col-2 col-form-label text-end"><label class="float-right">コメント:</label></div>
+                    <div class="col container-fluid">{{ form.comment }}</div>
+                </div>
+                <div class="row py-1">
+                    <div class="col col-2 col-form-label text-end"><label class="float-right">備考:</label></div>
+                    <div class="col container-fluid">{{ form.note }}</div>
+                </div>
+                <div class="row py-3">
+                    <div class="col col-2"></div>
+                    <div class="col col-4">
+                        <input type="submit" value="保存" class="btn d-block mx-auto d-flex align-items-center btn-primary">
+                    </div>
+                    <div class="col col-4">
+                    {% if back_url %}
+                        <a href="{{ back_url }}" class="btn btn-secondary">戻る</a>
+                    {% else %}
+                        <a href="{% url 'property_building' data.building.oid %}?page=garage_page#garage-list-anchor" class="btn btn-secondary">戻る</a>
+                    {% endif %}
+                    </div>
+                    <div class="col col-2"></div>
+                </div>
+            </form>
+        </form>
+    {% endblock %}
+
+    {% block footer %}{% endblock %}
+
+    {% block page_bottom %}{% endblock %}

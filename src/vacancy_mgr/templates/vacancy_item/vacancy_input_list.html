@@ -1,0 +1,46 @@
+{% extends 'vacancy_mgr/base.html' %}
+{% load static %}
+{% load humanize %}
+
+    {% block head_title %}{{ item_name }}一覧{% endblock %}
+    {% block head %}
+        <link rel="stylesheet" href="{% static 'vacancy_item/css/style.css' %}">
+    {% endblock %}
+
+    {% block page_top %}{% endblock %}
+
+    {% block header %}{% endblock %}
+
+    {% block h1_title %}【{{ item_name }}一覧】{% endblock %}
+
+    {% block contents %}
+        <div  id="data-list-header">
+            <div class="row py-2">
+                <div id="link-add-item" class="col col-12 text-start">
+                    <a href="{{ create_item_url }}">{{ item_name }}追加</a>
+                </div>
+            </div>
+        </div>
+        <div id="data-list">
+        {% if items %}
+            <div class="row pb-5">
+                <div class="col col-8 py-2 text-center">内容</div>
+                <div class="col col-2 py-2 text-center">表示順</div>
+                <div class="col col-2 py-2 text-center">停止</div>
+            {% for item in items %}
+                <div class="col col-8 py-2"><a href="{{ item_url }}{{ item.idb64 }}" target="_blank" rel="noopener noreferrer">{{ item.input_contents }}</a></div>
+                <div class="col col-2 py-2 text-center">{{ item.priority | default_if_none:'' }}</div>
+                <div class="col col-2 py-2 text-center">{% if item.is_stopped %}×{% endif %}</div>
+            {% endfor %}
+            </div>
+        {% else %}
+            <div class="row py-2">
+                <div class="col col-12 text-center">該当する{{ item_name }}はありません。</div>
+            </div>
+        {% endif %}
+        </div>
+    {% endblock %}
+
+    {% block footer %}{% endblock %}
+
+    {% block page_bottom %}{% endblock %}

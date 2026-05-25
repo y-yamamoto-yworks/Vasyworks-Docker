@@ -1,0 +1,58 @@
+{% extends 'vacancy_mgr/base.html' %}
+{% load static %}
+{% load humanize %}
+
+    {% block head_title %}建物エリア{% endblock %}
+    {% block head %}
+        <link rel="stylesheet" href="{% static 'search/css/style.css' %}">
+    {% endblock %}
+
+    {% block page_top %}{% endblock %}
+
+    {% block header %}{% endblock %}
+
+    {% block h1_title %}【建物エリア検索】{% endblock %}
+
+    {% block contents %}
+        <div id="search-conditions-form">
+            <form action="" method="post" enctype="multipart/form-data" v-on:submit="submit($event)">
+                {% csrf_token %}
+                <div class="row gx-2 gy-3">
+                    <div class="col col-4">{{ form.pref }}</div>
+                    <div class="col col-4">{{ form.city }}</div>
+                    <div class="col col-4">{{ form.area }}</div>
+
+                    <div class="col col-2"></div>
+                    <div class="col col-4">
+                        <input type="submit" value="検索" class="btn d-block d-flex mx-auto align-items-center btn-primary">
+                    </div>
+                    <div class="col col-4">
+                        <input type="submit" value="クリア" v-on:click="clearConditions($event)" class="btn d-block d-flex mx-auto align-items-center btn-secondary">
+                    </div>
+                    <div class="col col-2"></div>
+                </div>
+            </form>
+        </div>
+
+        {% if is_searched %}
+        {% if buildings %}<div class="total-count">全 {{ buildings|length }} 件</div>{% endif %}
+        {% include 'search/includes/building_list.html' %}
+        {% else %}
+        <div class="search-message">
+            <p>市区町村または地域を選択して、検索を実行してください。</p>
+        </div>
+        {% endif %}
+
+    {% endblock %}
+
+    {% block footer %}{% endblock %}
+
+    {% block page_bottom %}
+        <script type="text/javascript" src="{% static 'search/js/search_area.js' %}"></script>
+        <script type="text/javascript">
+            var searchApp = createSearchAreaVue(
+                "{{ api_key }}",
+                "{{ default_pref_id | default_if_none:'' }}"
+            );
+        </script>
+    {% endblock %}

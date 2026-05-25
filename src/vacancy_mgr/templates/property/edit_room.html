@@ -1,0 +1,1053 @@
+{% extends 'vacancy_mgr/base.html' %}
+{% load static %}
+{% load humanize %}
+
+    {% block head_title %}部屋編集 {{ room.building.building_name }} {{ room.room_no | default_if_none:'' }} 号室{% endblock %}
+    {% block head %}
+        <link rel="stylesheet" href="{% static 'property/css/style.css' %}">
+        <link rel="stylesheet" href="{% static 'property/css/style_ids.css' %}">
+    {% endblock %}
+
+    {% block page_top %}{% endblock %}
+
+    {% block header %}{% endblock %}
+
+    {% block h1_title %}【部屋編集】{{ room.room_no | default_if_none:'' }} 号室（{{ room.building.building_name }}）{% endblock %}
+
+    {% block contents %}
+        <div id="data-form">
+            <div class="label-links">
+                <ul>
+                    <li><a href="#status-anchor" class="btn btn-outline-primary">部屋状況</a></li>
+                    <li><a href="#monthly-cost-anchor" class="btn btn-outline-primary">月額費用</a></li>
+                    <li><a href="#initial-cost-anchor" class="btn btn-outline-primary">初期費用</a></li>
+                    <li><a href="#renewal-anchor" class="btn btn-outline-primary">契約更新等</a></li>
+                    <li><a href="#cancel-anchor" class="btn btn-outline-primary">解約等</a></li>
+                    <li><a href="#special_agreement-anchor" class="btn btn-outline-primary">特約事項</a></li>
+                    <li><a href="#layout-anchor" class="btn btn-outline-primary">間取り</a></li>
+                    <li><a href="#layout-detail-anchor" class="btn btn-outline-primary">間取り詳細</a></li>
+                    <li><a href="#main-equipment-anchor" class="btn btn-outline-primary">主要設備</a></li>
+                    <li><a href="#constraints-anchor" class="btn btn-outline-primary">制約条件</a></li>
+                    <li><a href="#pm-anchor" class="btn btn-outline-primary">管理情報</a></li>
+                    <li><a href="#vacancy-anchor" class="btn btn-outline-primary">空室情報</a></li>
+                    <li><a href="#web-anchor" class="btn btn-outline-primary">WEB掲載情報</a></li>
+                </ul>
+            </div>
+        {% if back_url %}
+            <form action="{% url 'property_edit_room'  room.oid %}?back_url={{ escaped_back_url }}" method="post" enctype="multipart/form-data">
+        {% else %}
+            <form action="{% url 'property_edit_room'  room.oid %}" method="post" enctype="multipart/form-data">
+        {% endif %}
+                {% csrf_token %}
+                {% if form.errors %}
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <p>*&nbsp;{{ field.label }} : {{ error }}</p>
+                        {% endfor %}
+                     {% endfor %}
+                {% endif %}
+
+                <div class="row category-title">
+                    <div class="col col-10 py-1 align-bottom">【識別情報】</div>
+                    <div class="col col-2 py-1 text-end">
+                        <a href="{% url 'property_copy_room' room.oid %}" class="btn btn-sm btn-outline-secondary">データコピー </a>
+                    </div>
+                </div>
+                <div class="row category-contents">
+                    <div class="col col-12">
+                        <div class="row py-1">
+                            <div class="col col-12 col-form-label"><label>建物名:</label>{{ room.building.building_name }}</div>
+                            <div class="col col-12 col-form-label"><label>住所:</label>{{ room.building.address }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>部屋ID:</label>{{ room.id }}</div>
+                            <div class="col col-auto col-form-label"><label>部屋番号:</label></div>
+                            <div class="col col-auto">{{ form.room_no }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>号室</span></div>
+                            <div class="col col-auto col-form-label"><label>部屋階数:</label></div>
+                            <div class="col col-auto">{{ form.room_floor }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>階</span></div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>賃貸種別:</label></div>
+                            <div class="col col-auto">{{ form.rental_type }}</div>
+                            <div class="col col-auto col-form-label"><label>閲覧レベル:</label></div>
+                            <div class="col col-auto">{{ form.room_auth_level }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto pt-2"><label>部屋一室借上:</label>{{ form.is_sublease }}</div>
+                            <div class="col col-auto pt-2"><label>部屋一室専任:</label>{{ form.is_entrusted }}</div>
+                            <div class="col col-auto pt-2"><label>分譲管理:</label>{{ form.is_condo_management }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>分譲オーナー:</label>[[ condoOwnerName ]]{{ form.condo_owner }}</div>
+                            <div class="col col-auto">
+                                <input type="button" value="選択" v-on:click="openCondoOwnerModal($event)" class="btn d-block d-flex align-items-center btn-info">&nbsp;
+                            </div>
+                            <div class="col col-auto col-form-label"><label>分譲賃貸管理会社:</label>[[ condoTraderName ]]{{ form.condo_trader }}</div>
+                            <div class="col col-auto">
+                                <input type="button" value="選択" v-on:click="openCondoTraderModal($event)" class="btn d-block d-flex align-items-center btn-info">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% include 'property/includes/edit_room_commands.html' %}
+
+                <span id="status-anchor" class="anchor-link"></span>
+                <div class="row category-title">
+                    <div class="col col-12">【部屋状況】</div>
+                </div>
+                <div class="row category-contents">
+                    <div class="col col-12">
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>部屋状況:</label></div>
+                            <div class="col col-auto">{{ form.room_status }}</div>
+                            <div class="col col-auto col-form-label"><label>空室状況:</label></div>
+                            <div class="col col-auto">{{ form.vacancy_status }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-12 col-form-label"><label>空室状況備考:</label></div>
+                            <div class="col col-12">{{ form.vacancy_status_note }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>保留業者:</label></div>
+                            <div class="col col-auto">{{ form.pending_trader_name }}</div>
+                            <div class="col col-auto col-form-label"><label>保留開始日:</label></div>
+                            <div class="col col-auto">{{ form.pending_start_date }}</div>
+                            <div class="col col-auto col-form-label"><label>保留終了日:</label></div>
+                            <div class="col col-auto">{{ form.pending_end_date }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-12 col-form-label"><label>保留備考:</label></div>
+                            <div class="col col-12">{{ form.pending_note }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>入居可能日:</label></div>
+                            <div class="col col-auto">{{ form.live_start_year }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>年</span></div>
+                            <div class="col col-auto">{{ form.live_start_month }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>月</span></div>
+                            <div class="col col-auto">{{ form.live_start_day }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-12 col-form-label"><label>入居可能日備考:</label></div>
+                            <div class="col col-12">{{ form.live_start_note }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>解約予定日:</label></div>
+                            <div class="col col-auto">{{ form.cancel_scheduled_year }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>年</span></div>
+                            <div class="col col-auto">{{ form.cancel_scheduled_month }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>月</span></div>
+                            <div class="col col-auto">{{ form.cancel_scheduled_day }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-12 col-form-label"><label>解約予定日備考:</label></div>
+                            <div class="col col-12">{{ form.cancel_scheduled_note }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>リフォーム内容:</label></div>
+                            <div class="col">{{ form.reform_comment }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>リフォーム実施:</label></div>
+                            <div class="col col-auto">{{ form.reform_year }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>年</span></div>
+                            <div class="col col-auto">{{ form.reform_month }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>月</span></div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-12 col-form-label"><label>リフォーム備考:</label></div>
+                            <div class="col col-12">{{ form.reform_note }}</div>
+                        </div>
+                    </div>
+                </div>
+                {% include 'property/includes/edit_room_commands.html' %}
+
+                <span id="monthly-cost-anchor" class="anchor-link"></span>
+                <div class="row category-title">
+                    <div class="col col-12">【月額費用】</div>
+                </div>
+                <div class="row category-contents">
+                    <div class="col col-12">
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>賃料:</label></div>
+                            <div class="col col-auto">{{ form.rent }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>円&nbsp;（～</span></div>
+                            <div class="col col-auto">{{ form.rent_upper }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>円）</span></div>
+                            <div class="col col-auto col-form-label"><label>税区分:</label></div>
+                            <div class="col col-auto">{{ form.rent_tax_type }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>仲介他業者への提示賃料:</label></div>
+                            <div class="col col-auto">{{ form.trader_rent }}</div>
+                             <div class="col col-auto col-form-label text-start"><span>円</span>&nbsp;<span class="annotation">※社内向け提示額と異なる場合のみ</span></div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto pt-2"><label>賃料非表示:</label>{{ form.rent_hidden }}</div>
+                            <div class="col col-auto col-form-label text-start"><span class="annotation">※未決定、相談など</span></div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>{{ condo_fees_name }}種別:</label></div>
+                            <div class="col col-auto">{{ form.condo_fees_type }}</div>
+                            <div class="col col-auto col-form-label"><label>金額:</label></div>
+                            <div class="col col-auto">{{ form.condo_fees }}</div>
+                            <div class="col col-auto col-form-label"><label>税区分:</label></div>
+                            <div class="col col-auto">{{ form.condo_fees_tax_type }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>水道費種別:</label></div>
+                            <div class="col col-auto">{{ form.water_cost_type }}</div>
+                            <div class="col col-auto col-form-label"><label>金額:</label></div>
+                            <div class="col col-auto">{{ form.water_cost }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>円</span></div>
+                            <div class="col col-auto col-form-label"><label>税区分:</label></div>
+                            <div class="col col-auto">{{ form.water_cost_tax_type }}</div>
+                            <div class="col col-auto col-form-label"><label>検針種別:</label></div>
+                            <div class="col col-auto">{{ form.water_check_type }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>支払い方法:</label></div>
+                            <div class="col col-auto">{{ form.payment_type }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>支払手数料:</label></div>
+                            <div class="col col-auto">{{ form.payment_fee_type }}</div>
+                            <div class="col col-auto col-form-label"><label>金額:</label></div>
+                            <div class="col col-auto">{{ form.payment_fee }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>円</span></div>
+                            <div class="col col-auto col-form-label"><label>税区分:</label></div>
+                            <div class="col col-auto">{{ form.payment_fee_tax_type }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>フリーレント:</label></div>
+                            <div class="col col-auto">{{ form.free_rent_type }}</div>
+                            <div class="col col-auto col-form-label"><label>月数:</label></div>
+                            <div class="col col-auto">{{ form.free_rent_months }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>ヶ月</span></div>
+                            <div class="col col-auto col-form-label"><label>期限:</label></div>
+                            <div class="col col-auto">{{ form.free_rent_limit_year }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>年</span></div>
+                            <div class="col col-auto">{{ form.free_rent_limit_month }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>月</span></div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>月額費用名1:</label></div>
+                            <div class="col col-auto">{{ form.monthly_cost_name1 }}</div>
+                            <div class="col col-auto col-form-label"><label>金額:</label></div>
+                            <div class="col col-auto">{{ form.monthly_cost1 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span></span></div>
+                            <div class="col col-auto col-form-label"><label>税区分:</label></div>
+                            <div class="col col-auto">{{ form.monthly_cost_tax_type1 }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>月額費用名2:</label></div>
+                            <div class="col col-auto">{{ form.monthly_cost_name2 }}</div>
+                            <div class="col col-auto col-form-label"><label>金額:</label></div>
+                            <div class="col col-auto">{{ form.monthly_cost2 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span></span></div>
+                            <div class="col col-auto col-form-label"><label>税区分:</label></div>
+                            <div class="col col-auto">{{ form.monthly_cost_tax_type2 }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>月額費用名3:</label></div>
+                            <div class="col col-auto">{{ form.monthly_cost_name3 }}</div>
+                            <div class="col col-auto col-form-label"><label>金額:</label></div>
+                            <div class="col col-auto">{{ form.monthly_cost3 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span></span></div>
+                            <div class="col col-auto col-form-label"><label>税区分:</label></div>
+                            <div class="col col-auto">{{ form.monthly_cost_tax_type3 }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>月額費用名4:</label></div>
+                            <div class="col col-auto">{{ form.monthly_cost_name4 }}</div>
+                            <div class="col col-auto col-form-label"><label>金額:</label></div>
+                            <div class="col col-auto">{{ form.monthly_cost4 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span></span></div>
+                            <div class="col col-auto col-form-label"><label>税区分:</label></div>
+                            <div class="col col-auto">{{ form.monthly_cost_tax_type4 }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>月額費用名5:</label></div>
+                            <div class="col col-auto">{{ form.monthly_cost_name5 }}</div>
+                            <div class="col col-auto col-form-label"><label>金額:</label></div>
+                            <div class="col col-auto">{{ form.monthly_cost5 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span></span></div>
+                            <div class="col col-auto col-form-label"><label>税区分:</label></div>
+                            <div class="col col-auto">{{ form.monthly_cost_tax_type5 }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>月額費用名6:</label></div>
+                            <div class="col col-auto">{{ form.monthly_cost_name6 }}</div>
+                            <div class="col col-auto col-form-label"><label>金額:</label></div>
+                            <div class="col col-auto">{{ form.monthly_cost6 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span></span></div>
+                            <div class="col col-auto col-form-label"><label>税区分:</label></div>
+                            <div class="col col-auto">{{ form.monthly_cost_tax_type6 }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>月額費用名7:</label></div>
+                            <div class="col col-auto">{{ form.monthly_cost_name7 }}</div>
+                            <div class="col col-auto col-form-label"><label>金額:</label></div>
+                            <div class="col col-auto">{{ form.monthly_cost7 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span></span></div>
+                            <div class="col col-auto col-form-label"><label>税区分:</label></div>
+                            <div class="col col-auto">{{ form.monthly_cost_tax_type7 }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>月額費用名8:</label></div>
+                            <div class="col col-auto">{{ form.monthly_cost_name8 }}</div>
+                            <div class="col col-auto col-form-label"><label>金額:</label></div>
+                            <div class="col col-auto">{{ form.monthly_cost8 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span></span></div>
+                            <div class="col col-auto col-form-label"><label>税区分:</label></div>
+                            <div class="col col-auto">{{ form.monthly_cost_tax_type8 }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>月額費用名9:</label></div>
+                            <div class="col col-auto">{{ form.monthly_cost_name9 }}</div>
+                            <div class="col col-auto col-form-label"><label>金額:</label></div>
+                            <div class="col col-auto">{{ form.monthly_cost9 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span></span></div>
+                            <div class="col col-auto col-form-label"><label>税区分:</label></div>
+                            <div class="col col-auto">{{ form.monthly_cost_tax_type9 }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>月額費用名10:</label></div>
+                            <div class="col col-auto">{{ form.monthly_cost_name10 }}</div>
+                            <div class="col col-auto col-form-label"><label>金額:</label></div>
+                            <div class="col col-auto">{{ form.monthly_cost10 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span></span></div>
+                            <div class="col col-auto col-form-label"><label>税区分:</label></div>
+                            <div class="col col-auto">{{ form.monthly_cost_tax_type10 }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-12 col-form-label"><label>月額費用備考:</label></div>
+                            <div class="col col-12">{{ form.monthly_cost_note }}</div>
+                        </div>
+                    </div>
+                </div>
+                {% include 'property/includes/edit_room_commands.html' %}
+
+                <span id="initial-cost-anchor" class="anchor-link"></span>
+                <div class="row category-title">
+                    <div class="col col-12">【初期費用】</div>
+                </div>
+                <div class="row category-contents">
+                    <div class="col col-12">
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>保証金1 種別:</label></div>
+                            <div class="col col-auto">{{ form.deposit_type1 }}</div>
+                            <div class="col col-auto col-form-label"><label>表記:</label></div>
+                            <div class="col col-auto">{{ form.deposit_notation1 }}</div>
+                            <div class="col col-auto col-form-label"><label>金額・月数:</label></div>
+                            <div class="col col-auto">{{ form.deposit_value1 }}</div>
+                            <div class="col col-auto col-form-label"><label>税区分:</label></div>
+                            <div class="col col-auto">{{ form.deposit_tax_type1 }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>保証金1 コメント:</label></div>
+                            <div class="col col-auto">{{ form.deposit_comment1 }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>保証金2 種別:</label></div>
+                            <div class="col col-auto">{{ form.deposit_type2 }}</div>
+                            <div class="col col-auto col-form-label"><label>表記:</label></div>
+                            <div class="col col-auto">{{ form.deposit_notation2 }}</div>
+                            <div class="col col-auto col-form-label"><label>金額・月数:</label></div>
+                            <div class="col col-auto">{{ form.deposit_value2 }}</div>
+                            <div class="col col-auto col-form-label"><label>税区分:</label></div>
+                            <div class="col col-auto">{{ form.deposit_tax_type2 }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>保証金2 コメント:</label></div>
+                            <div class="col col-auto">{{ form.deposit_comment2 }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>一時金1 種別:</label></div>
+                            <div class="col col-auto">{{ form.key_money_type1 }}</div>
+                            <div class="col col-auto col-form-label"><label>表記:</label></div>
+                            <div class="col col-auto">{{ form.key_money_notation1 }}</div>
+                            <div class="col col-auto col-form-label"><label>金額・月数:</label></div>
+                            <div class="col col-auto">{{ form.key_money_value1 }}</div>
+                            <div class="col col-auto col-form-label"><label>税区分:</label></div>
+                            <div class="col col-auto">{{ form.key_money_tax_type1 }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>一時金1 コメント:</label></div>
+                            <div class="col col-auto">{{ form.key_money_comment1 }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>一時金2 種別:</label></div>
+                            <div class="col col-auto">{{ form.key_money_type2 }}</div>
+                            <div class="col col-auto col-form-label"><label>表記:</label></div>
+                            <div class="col col-auto">{{ form.key_money_notation2 }}</div>
+                            <div class="col col-auto col-form-label"><label>金額・月数:</label></div>
+                            <div class="col col-auto">{{ form.key_money_value2 }}</div>
+                            <div class="col col-auto col-form-label"><label>税区分:</label></div>
+                            <div class="col col-auto">{{ form.key_money_tax_type2 }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>一時金2 コメント:</label></div>
+                            <div class="col col-auto">{{ form.key_money_comment2 }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>火災保険:</label></div>
+                            <div class="col col-auto">{{ form.insurance_type }}</div>
+                            <div class="col col-auto col-form-label"><label>保険会社:</label></div>
+                            <div class="col col-auto">{{ form.insurance_company }}</div>
+                            <div class="col col-auto">
+                                <input type="button" value="入力" v-on:click="openInputInsuranceCompanyModal($event)" class="btn d-block d-flex align-items-center btn-info">
+                            </div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>火災保険料:</label></div>
+                            <div class="col col-auto">{{ form.insurance_years }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>年</span></div>
+                            <div class="col col-auto">{{ form.insurance_fee }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>円</span></div>
+                            <div class="col col-auto col-form-label"><label>税区分:</label></div>
+                            <div class="col col-auto">{{ form.insurance_fee_tax_type }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>家賃保証:</label></div>
+                            <div class="col col-auto">{{ form.guarantee_type }}</div>
+                            <div class="col col-auto col-form-label"><label>保証会社:</label></div>
+                            <div class="col col-auto">{{ form.guarantee_company }}</div>
+                            <div class="col col-auto">
+                                <input type="button" value="入力" v-on:click="openInputGuaranteeCompanyModal($event)" class="btn d-block d-flex align-items-center btn-info">
+                            </div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>保証料:</label></div>
+                            <div class="col col-auto">{{ form.guarantee_fee }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>書類代:</label></div>
+                            <div class="col col-auto">{{ form.document_cost_existence }}</div>
+                            <div class="col col-auto col-form-label"><label>金額:</label></div>
+                            <div class="col col-auto">{{ form.document_cost }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>円</span></div>
+                            <div class="col col-auto col-form-label"><label>税区分:</label></div>
+                            <div class="col col-auto">{{ form.document_cost_tax_type }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>書類代 コメント:</label></div>
+                            <div class="col col-auto">{{ form.document_cost_comment }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>鍵交換代:</label></div>
+                            <div class="col col-auto">{{ form.key_change_cost_existence }}</div>
+                            <div class="col col-auto col-form-label"><label>金額:</label></div>
+                            <div class="col col-auto">{{ form.key_change_cost }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>円</span></div>
+                            <div class="col col-auto col-form-label"><label>税区分:</label></div>
+                            <div class="col col-auto">{{ form.key_change_cost_tax_type }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>鍵交換代 コメント:</label></div>
+                            <div class="col col-auto">{{ form.key_change_comment }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>初期費用名1:</label></div>
+                            <div class="col col-auto">{{ form.initial_cost_name1 }}</div>
+                            <div class="col col-auto col-form-label"><label>金額:</label></div>
+                            <div class="col col-auto">{{ form.initial_cost1 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>円</span></div>
+                            <div class="col col-auto col-form-label"><label>税区分:</label></div>
+                            <div class="col col-auto">{{ form.initial_cost_tax_type1 }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>初期費用名2:</label></div>
+                            <div class="col col-auto">{{ form.initial_cost_name2 }}</div>
+                            <div class="col col-auto col-form-label"><label>金額:</label></div>
+                            <div class="col col-auto">{{ form.initial_cost2 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>円</span></div>
+                            <div class="col col-auto col-form-label"><label>税区分:</label></div>
+                            <div class="col col-auto">{{ form.initial_cost_tax_type2 }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>初期費用名3:</label></div>
+                            <div class="col col-auto">{{ form.initial_cost_name3 }}</div>
+                            <div class="col col-auto col-form-label"><label>金額:</label></div>
+                            <div class="col col-auto">{{ form.initial_cost3 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>円</span></div>
+                            <div class="col col-auto col-form-label"><label>税区分:</label></div>
+                            <div class="col col-auto">{{ form.initial_cost_tax_type3 }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>初期費用名4:</label></div>
+                            <div class="col col-auto">{{ form.initial_cost_name4 }}</div>
+                            <div class="col col-auto col-form-label"><label>金額:</label></div>
+                            <div class="col col-auto">{{ form.initial_cost4 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>円</span></div>
+                            <div class="col col-auto col-form-label"><label>税区分:</label></div>
+                            <div class="col col-auto">{{ form.initial_cost_tax_type4 }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>初期費用名5:</label></div>
+                            <div class="col col-auto">{{ form.initial_cost_name5 }}</div>
+                            <div class="col col-auto col-form-label"><label>金額:</label></div>
+                            <div class="col col-auto">{{ form.initial_cost5 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>円</span></div>
+                            <div class="col col-auto col-form-label"><label>税区分:</label></div>
+                            <div class="col col-auto">{{ form.initial_cost_tax_type5 }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>初期費用名6:</label></div>
+                            <div class="col col-auto">{{ form.initial_cost_name6 }}</div>
+                            <div class="col col-auto col-form-label"><label>金額:</label></div>
+                            <div class="col col-auto">{{ form.initial_cost6 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>円</span></div>
+                            <div class="col col-auto col-form-label"><label>税区分:</label></div>
+                            <div class="col col-auto">{{ form.initial_cost_tax_type6 }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>初期費用名7:</label></div>
+                            <div class="col col-auto">{{ form.initial_cost_name7 }}</div>
+                            <div class="col col-auto col-form-label"><label>金額:</label></div>
+                            <div class="col col-auto">{{ form.initial_cost7 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>円</span></div>
+                            <div class="col col-auto col-form-label"><label>税区分:</label></div>
+                            <div class="col col-auto">{{ form.initial_cost_tax_type7 }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>初期費用名8:</label></div>
+                            <div class="col col-auto">{{ form.initial_cost_name8 }}</div>
+                            <div class="col col-auto col-form-label"><label>金額:</label></div>
+                            <div class="col col-auto">{{ form.initial_cost8 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>円</span></div>
+                            <div class="col col-auto col-form-label"><label>税区分:</label></div>
+                            <div class="col col-auto">{{ form.initial_cost_tax_type8 }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>初期費用名9:</label></div>
+                            <div class="col col-auto">{{ form.initial_cost_name9 }}</div>
+                            <div class="col col-auto col-form-label"><label>金額:</label></div>
+                            <div class="col col-auto">{{ form.initial_cost9 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>円</span></div>
+                            <div class="col col-auto col-form-label"><label>税区分:</label></div>
+                            <div class="col col-auto">{{ form.initial_cost_tax_type9 }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>初期費用名10:</label></div>
+                            <div class="col col-auto">{{ form.initial_cost_name10 }}</div>
+                            <div class="col col-auto col-form-label"><label>金額:</label></div>
+                            <div class="col col-auto">{{ form.initial_cost10 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>円</span></div>
+                            <div class="col col-auto col-form-label"><label>税区分:</label></div>
+                            <div class="col col-auto">{{ form.initial_cost_tax_type10 }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-12 col-form-label"><label>初期費用備考:</label></div>
+                            <div class="col col-12">{{ form.initial_cost_note }}</div>
+                        </div>
+                    </div>
+                </div>
+                {% include 'property/includes/edit_room_commands.html' %}
+
+                <span id="renewal-anchor" class="anchor-link"></span>
+                <div class="row category-title">
+                    <div class="col col-12">【契約更新等】</div>
+                </div>
+                <div class="row category-contents">
+                    <div class="col col-12">
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>契約期間:</label></div>
+                            <div class="col col-auto">{{ form.contract_years }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>年</span></div>
+                            <div class="col col-auto">{{ form.contract_months }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>ヶ月</span></div>
+                            <div class="col col-auto pt-2"><label>自動更新:</label>{{ form.is_auto_renewal }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>更新料:</label></div>
+                            <div class="col col-auto">{{ form.renewal_fee_notation }}</div>
+                            <div class="col col-auto col-form-label"><label>金額・月数・パーセント:</label></div>
+                            <div class="col col-auto">{{ form.renewal_fee_value }}</div>
+                            <div class="col col-auto col-form-label"><label>税区分:</label></div>
+                            <div class="col col-auto">{{ form.renewal_fee_tax_type }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>更新事務手数料:</label></div>
+                            <div class="col col-auto">{{ form.renewal_charge_existence }}</div>
+                            <div class="col col-auto col-form-label"><label>金額:</label></div>
+                            <div class="col col-auto">{{ form.renewal_charge }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>円</span></div>
+                            <div class="col col-auto col-form-label"><label>税区分:</label></div>
+                            <div class="col col-auto">{{ form.renewal_charge_tax_type }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-12 col-form-label"><label>更新備考:</label></div>
+                            <div class="col col-12">{{ form.renewal_note }}</div>
+                        </div>
+                         <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>再契約:</label></div>
+                            <div class="col col-auto">{{ form.recontract_fee_existence }}</div>
+                            <div class="col col-auto col-form-label"><label>金額:</label></div>
+                            <div class="col col-auto">{{ form.recontract_fee }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>円</span></div>
+                            <div class="col col-auto col-form-label"><label>税区分:</label></div>
+                            <div class="col col-auto">{{ form.recontract_fee_tax_type }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-12 col-form-label"><label>再契約備考:</label></div>
+                            <div class="col col-12">{{ form.recontract_note }}</div>
+                        </div>
+                    </div>
+                </div>
+                {% include 'property/includes/edit_room_commands.html' %}
+
+                <span id="cancel-anchor" class="anchor-link"></span>
+                <div class="row category-title">
+                    <div class="col col-12">【解約等】</div>
+                </div>
+                <div class="row category-contents">
+                    <div class="col col-12">
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>解約通知期限:</label></div>
+                            <div class="col col-auto">{{ form.cancel_notice_limit }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>ヶ月前</span></div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-12 col-form-label"><label>解約備考:</label></div>
+                            <div class="col col-12">{{ form.cancel_note }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-12 col-form-label"><label>短期解約備考:</label></div>
+                            <div class="col col-12">{{ form.short_cancel_note }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>退去時清掃費用:</label></div>
+                            <div class="col col-auto">{{ form.cleaning_type }}</div>
+                            <div class="col col-auto col-form-label"><label>金額:</label></div>
+                            <div class="col col-auto">{{ form.cleaning_cost }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>円</span></div>
+                            <div class="col col-auto col-form-label"><label>税区分:</label></div>
+                            <div class="col col-auto">{{ form.cleaning_cost_tax_type }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-12 col-form-label"><label>退去時清掃備考:</label></div>
+                            <div class="col col-12">{{ form.cleaning_note }}</div>
+                        </div>
+                    </div>
+                </div>
+                {% include 'property/includes/edit_room_commands.html' %}
+
+                <span id="special_agreement-anchor" class="anchor-link"></span>
+                <div class="row category-title">
+                    <div class="col col-12">【特約事項】</div>
+                </div>
+                <div class="row category-contents">
+                    <div class="col col-12">
+                         <div class="row py-1">
+                            <div class="col col-12 col-form-label"><label>特約:</label></div>
+                            <div class="col col-12">{{ form.special_agreement }}</div>
+                        </div>
+                    </div>
+                </div>
+                {% include 'property/includes/edit_room_commands.html' %}
+
+                <span id="layout-anchor" class="anchor-link"></span>
+                <div class="row category-title">
+                    <div class="col col-12">【間取り】</div>
+                </div>
+                <div class="row category-contents">
+                    <div class="col col-12">
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>間取り種別:</label></div>
+                            <div class="col col-auto">{{ form.layout_type }}</div>
+                            <div class="col col-auto col-form-label"><label>専有面積:</label></div>
+                            <div class="col col-auto">{{ form.room_area }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>m<sup>2</sup></span></div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>バルコニー種別:</label></div>
+                            <div class="col col-auto">{{ form.balcony_type }}</div>
+                            <div class="col col-auto col-form-label"><label>開口向き:</label></div>
+                            <div class="col col-auto">{{ form.direction }}</div>
+                            <div class="col col-auto col-form-label"><label>:</label></div>
+                            <div class="col col-auto">{{ form.balcony_area }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>m<sup>2</sup></span></div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-12 col-form-label"><label>間取り備考:</label></div>
+                            <div class="col col-12">{{ form.layout_note }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <span id="layout-detail-anchor" class="anchor-link"></span>
+                <div class="row category-title">
+                    <div class="col col-12">【間取り詳細】</div>
+                </div>
+                <div class="row category-contents">
+                    <div class="col col-12">
+                        <div class="row py-1">
+                            <div class="col col-12 col-form-label"><label>洋室:</label></div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>1:</label></div>
+                            <div class="col col-auto">{{ form.western_style_room1 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>帖</span></div>
+                            <div class="col col-auto col-form-label"><label>2:</label></div>
+                            <div class="col col-auto">{{ form.western_style_room2 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>帖</span></div>
+                            <div class="col col-auto col-form-label"><label>3:</label></div>
+                            <div class="col col-auto">{{ form.western_style_room3 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>帖</span></div>
+                            <div class="col col-auto col-form-label"><label>4:</label></div>
+                            <div class="col col-auto">{{ form.western_style_room4 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>帖</span></div>
+                            <div class="col col-auto col-form-label"><label>5:</label></div>
+                            <div class="col col-auto">{{ form.western_style_room5 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>帖</span></div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>6:</label></div>
+                            <div class="col col-auto">{{ form.western_style_room6 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>帖</span></div>
+                            <div class="col col-auto col-form-label"><label>7:</label></div>
+                            <div class="col col-auto">{{ form.western_style_room7 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>帖</span></div>
+                            <div class="col col-auto col-form-label"><label>8:</label></div>
+                            <div class="col col-auto">{{ form.western_style_room8 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>帖</span></div>
+                            <div class="col col-auto col-form-label"><label>9:</label></div>
+                            <div class="col col-auto">{{ form.western_style_room9 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>帖</span></div>
+                            <div class="col col-auto col-form-label"><label>10:</label></div>
+                            <div class="col col-auto">{{ form.western_style_room10 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>帖</span></div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-12 col-form-label"><label>和室:</label></div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>1:</label></div>
+                            <div class="col col-auto">{{ form.japanese_style_room1 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>帖</span></div>
+                            <div class="col col-auto col-form-label"><label>2:</label></div>
+                            <div class="col col-auto">{{ form.japanese_style_room2 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>帖</span></div>
+                            <div class="col col-auto col-form-label"><label>3:</label></div>
+                            <div class="col col-auto">{{ form.japanese_style_room3 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>帖</span></div>
+                            <div class="col col-auto col-form-label"><label>4:</label></div>
+                            <div class="col col-auto">{{ form.japanese_style_room4 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>帖</span></div>
+                            <div class="col col-auto col-form-label"><label>5:</label></div>
+                            <div class="col col-auto">{{ form.japanese_style_room5 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>帖</span></div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>6:</label></div>
+                            <div class="col col-auto">{{ form.japanese_style_room6 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>帖</span></div>
+                            <div class="col col-auto col-form-label"><label>7:</label></div>
+                            <div class="col col-auto">{{ form.japanese_style_room7 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>帖</span></div>
+                            <div class="col col-auto col-form-label"><label>8:</label></div>
+                            <div class="col col-auto">{{ form.japanese_style_room8 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>帖</span></div>
+                            <div class="col col-auto col-form-label"><label>9:</label></div>
+                            <div class="col col-auto">{{ form.japanese_style_room9 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>帖</span></div>
+                            <div class="col col-auto col-form-label"><label>10:</label></div>
+                            <div class="col col-auto">{{ form.japanese_style_room10 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>帖</span></div>
+                        </div>
+                    </div>
+                        <div class="row py-1">
+                            <div class="col col-12 col-form-label"><label>キッチン:</label></div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>1:</label></div>
+                            <div class="col col-auto">{{ form.kitchen_type1 }}</div>
+                            <div class="col col-auto">{{ form.kitchen1 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>帖</span></div>
+                            <div class="col col-auto col-form-label"><label>2:</label></div>
+                            <div class="col col-auto">{{ form.kitchen_type2 }}</div>
+                            <div class="col col-auto">{{ form.kitchen2 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>帖</span></div>
+                            <div class="col col-auto col-form-label"><label>3:</label></div>
+                            <div class="col col-auto">{{ form.kitchen_type3 }}</div>
+                            <div class="col col-auto">{{ form.kitchen3 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>帖</span></div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-12 col-form-label"><label>納戸:</label></div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>1:</label></div>
+                            <div class="col col-auto">{{ form.store_room1 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>帖</span></div>
+                            <div class="col col-auto col-form-label"><label>2:</label></div>
+                            <div class="col col-auto">{{ form.store_room2 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>帖</span></div>
+                            <div class="col col-auto col-form-label"><label>3:</label></div>
+                            <div class="col col-auto">{{ form.store_room3 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>帖</span></div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-12 col-form-label"><label>ロフト:</label></div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>1:</label></div>
+                            <div class="col col-auto">{{ form.loft1 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>帖</span></div>
+                            <div class="col col-auto col-form-label"><label>2:</label></div>
+                            <div class="col col-auto">{{ form.loft2 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>帖</span></div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-12 col-form-label"><label>サンルーム:</label></div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>1:</label></div>
+                            <div class="col col-auto">{{ form.sun_room1 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>帖</span></div>
+                            <div class="col col-auto col-form-label"><label>2:</label></div>
+                            <div class="col col-auto">{{ form.sun_room2 }}</div>
+                            <div class="col col-auto col-form-label text-start"><span>帖</span></div>
+                        </div>
+                </div>
+                {% include 'property/includes/edit_room_commands.html' %}
+
+                <span id="main-equipment-anchor" class="anchor-link"></span>
+                <div class="row category-title">
+                    <div class="col col-12">【主要設備】</div>
+                </div>
+                <div class="row category-contents">
+                    <div class="col col-12">
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>電気:</label></div>
+                            <div class="col col-auto">{{ form.electric_type }}</div>
+                            <div class="col col-auto">{{ form.electric_comment }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>ガス:</label></div>
+                            <div class="col col-auto">{{ form.gas_type }}</div>
+                            <div class="col col-auto">{{ form.gas_comment }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>浴室:</label></div>
+                            <div class="col col-auto">{{ form.bath_type }}</div>
+                            <div class="col col-auto">{{ form.bath_comment }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>トイレ:</label></div>
+                            <div class="col col-auto">{{ form.toilet_type }}</div>
+                            <div class="col col-auto">{{ form.toilet_comment }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>キッチン:</label></div>
+                            <div class="col col-auto">{{ form.kitchen_range_type }}</div>
+                            <div class="col col-auto">{{ form.kitchen_range_comment }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>インターネット:</label></div>
+                            <div class="col col-auto">{{ form.internet_type }}</div>
+                            <div class="col col-auto">{{ form.internet_comment }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>洗濯機:</label></div>
+                            <div class="col col-auto">{{ form.washer_type }}</div>
+                            <div class="col col-auto">{{ form.washer_comment }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <span id="constraints-anchor" class="anchor-link"></span>
+                <div class="row category-title">
+                    <div class="col col-12">【制約条件】</div>
+                </div>
+                <div class="row category-contents">
+                    <div class="col col-12">
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>ペット:</label></div>
+                            <div class="col col-auto">{{ form.pet_type }}</div>
+                            <div class="col col-auto">{{ form.pet_comment }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>楽器:</label></div>
+                            <div class="col col-auto">{{ form.instrument_type }}</div>
+                            <div class="col col-auto col-form-label"><label>事務所利用:</label></div>
+                            <div class="col col-auto">{{ form.office_use_type }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>学生:</label></div>
+                            <div class="col col-auto">{{ form.student_type }}</div>
+                            <div class="col col-auto col-form-label"><label>新入生予約:</label></div>
+                            <div class="col col-auto">{{ form.new_student_type }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>同居:</label></div>
+                            <div class="col col-auto">{{ form.live_together_type }}</div>
+                            <div class="col col-auto col-form-label"><label>子供:</label></div>
+                            <div class="col col-auto">{{ form.children_type }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>ルームシェア:</label></div>
+                            <div class="col col-auto">{{ form.share_type }}</div>
+                            <div class="col col-auto col-form-label"><label>外国人:</label></div>
+                            <div class="col col-auto">{{ form.non_japanese_type }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>法人契約:</label></div>
+                            <div class="col col-auto">{{ form.corp_contract_type }}</div>
+                            <div class="col col-auto col-form-label"><label>福祉契約:</label></div>
+                            <div class="col col-auto">{{ form.welfare_type }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>女性限定:</label></div>
+                            <div class="col col-auto">{{ form.only_woman_type }}</div>
+                            <div class="col col-auto col-form-label"><label>男性限定:</label></div>
+                            <div class="col col-auto">{{ form.only_man_type }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-12 col-form-label"><label>制約条件備考:</label></div>
+                            <div class="col col-12">{{ form.constraint_note }}</div>
+                        </div>
+                    </div>
+                </div>
+                {% include 'property/includes/edit_room_commands.html' %}
+
+                <span id="pm-anchor" class="anchor-link"></span>
+                <div class="row category-title">
+                    <div class="col col-12">【管理情報】</div>
+                </div>
+                <div class="row category-contents">
+                    <div class="col col-12">
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>広告料:</label></div>
+                            <div class="col col-auto">{{ form.ad_type }}</div>
+                            <div class="col col-auto col-form-label"><label>金額・月数:</label></div>
+                            <div class="col col-auto">{{ form.ad_value }}</div>
+                            <div class="col col-auto col-form-label"><label>税区分:</label></div>
+                            <div class="col col-auto">{{ form.ad_tax_type }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>仲介他業者への提示広告料:</label></div>
+                            <div class="col col-auto">{{ form.trader_ad_type }}</div>
+                            <div class="col col-auto col-form-label"><label>金額・月数:</label></div>
+                            <div class="col col-auto">{{ form.trader_ad_value }}</div>
+                            <div class="col col-auto col-form-label"><label>税区分:</label></div>
+                            <div class="col col-auto">{{ form.trader_ad_tax_type }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>貸主仲介手数料:</label></div>
+                            <div class="col col-auto">{{ form.owner_fee_type }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>鍵番号:</label></div>
+                            <div class="col col-auto">{{ form.key_no }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>仲介他業者の広告掲載:</label></div>
+                            <div class="col col-auto">{{ form.trader_publish_type }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-12 col-form-label"><label>仲介他業者の広告掲載備考:</label></div>
+                            <div class="col col-12">{{ form.trader_publish_note }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-auto col-form-label"><label>仲介他業者のポータル掲載:</label></div>
+                            <div class="col col-auto">{{ form.trader_portal_type }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-12 col-form-label"><label>仲介他業者のポータル掲載備考:</label></div>
+                            <div class="col col-12">{{ form.trader_portal_note }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-12 col-form-label"><label>鍵所在備考:</label></div>
+                            <div class="col col-12">{{ form.key_place_note }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-12 col-form-label"><label>非公開部屋備考:</label></div>
+                            <div class="col col-12">{{ form.private_note }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-12 col-form-label"><label>管理備考:</label></div>
+                            <div class="col col-12">{{ form.management_note }}</div>
+                        </div>
+                    </div>
+                </div>
+                {% include 'property/includes/edit_room_commands.html' %}
+
+                <span id="vacancy-anchor" class="anchor-link"></span>
+                <div class="row category-title">
+                    <div class="col col-12">【空室情報】</div>
+                </div>
+                <div class="row category-contents">
+                    <div class="col col-12">
+                        <div class="row py-1">
+                            <div class="col col-auto pt-2"><label>空室情報公開:</label>{{ form.is_publish_vacancy }}</div>
+                            <div class="col col-auto col-form-label"><label>公開開始日:</label></div>
+                            <div class="col col-auto">{{ form.vacancy_start_date }}</div>
+                            <div class="col col-auto col-form-label"><label>公開終了日:</label></div>
+                            <div class="col col-auto">{{ form.vacancy_end_date }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-12 col-form-label"><label>キャッチコピー:</label></div>
+                            <div class="col col-12">{{ form.vacancy_catch_copy }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-12 col-form-label"><label>アピール:</label></div>
+                            <div class="col col-12">{{ form.vacancy_appeal }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-12 col-form-label"><label>備考:</label></div>
+                            <div class="col col-12">{{ form.vacancy_note }}</div>
+                        </div>
+                    </div>
+                </div>
+                {% include 'property/includes/edit_room_commands.html' %}
+
+                <span id="web-anchor" class="anchor-link"></span>
+                <div class="row category-title">
+                    <div class="col col-12">【WEB掲載情報】</div>
+                </div>
+                <div class="row category-contents">
+                    <div class="col col-12">
+                        <div class="row py-1">
+                            <div class="col col-auto pt-2"><label>WEB公開:</label>{{ form.is_publish_web }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-12 col-form-label"><label>キャッチコピー:</label></div>
+                            <div class="col col-12">{{ form.web_catch_copy }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-12 col-form-label"><label>アピール:</label></div>
+                            <div class="col col-12">{{ form.web_appeal }}</div>
+                        </div>
+                        <div class="row py-1">
+                            <div class="col col-12 col-form-label"><label>備考:</label></div>
+                            <div class="col col-12">{{ form.web_note }}</div>
+                        </div>
+                    </div>
+                </div>
+                {% include 'property/includes/edit_room_commands.html' %}
+            </form>
+
+            {% include 'property/includes/edit_room_modals.html' %}
+
+        </div>
+
+    {% endblock %}
+
+    {% block footer %}{% endblock %}
+
+    {% block page_bottom %}
+        <script type="text/javascript" src="{% static 'property/js/edit_room.js' %}"></script>
+        <script type="text/javascript">
+            var app = createEditRoomVue(
+                "{{ api_key }}",
+                {{ room.condo_owner.id }},
+                "{{ room.condo_owner.owner_name | default_if_none:'' }}",
+                {{ room.condo_trader.id }},
+                "{{ room.condo_trader.trader_name | default_if_none:'' }}",
+            );
+        </script>
+    {% endblock %}

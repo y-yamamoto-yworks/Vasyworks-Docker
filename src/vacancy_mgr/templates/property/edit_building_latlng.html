@@ -1,0 +1,80 @@
+{% extends 'vacancy_mgr/base.html' %}
+{% load static %}
+{% load humanize %}
+
+    {% block head_title %}緯度経度 {{ data.building_name }} {% endblock %}
+    {% block head %}
+        <meta name="referrer" content="no-referrer-when-downgrade">
+        <link rel="stylesheet" href="{% static 'property/css/style.css' %}">
+        <link rel="stylesheet" href="{% static 'property/css/style_ids.css' %}">
+    {% endblock %}
+
+    {% block page_top %}{% endblock %}
+
+    {% block header %}{% endblock %}
+
+    {% block h1_title %}【緯度経度】{{ data.building_name }}{% endblock %}
+
+    {% block contents %}
+        <div id="data-form">
+        {% if back_url %}
+            <form action="{% url 'property_edit_building_latlng'  data.oid %}?back_url={{ escaped_back_url }}" method="post" enctype="multipart/form-data">
+        {% else %}
+            <form action="{% url 'property_edit_building_latlng'  data.oid %}" method="post" enctype="multipart/form-data">
+        {% endif %}
+                {% csrf_token %}
+                {% if form.errors %}
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <p>*&nbsp;{{ field.label }} : {{ error }}</p>
+                        {% endfor %}
+                     {% endfor %}
+                {% endif %}
+                <div class="row py-1 justify-content-center">
+                    <div class="col col-auto col-form-label"><label>緯度:</label></div>
+                    <div class="col col-auto">{{ form.lat }}</div>
+                    <div class="col col-auto col-form-label"><label>経度:</label></div>
+                    <div class="col col-auto">{{ form.lng }}</div>
+                </div>
+
+                <div class="row py-3 justify-content-center">
+                    <div class="col col-auto">
+                        <div id="id_map">
+                            <l-map :zoom="zoom" :center="center" @update:center="updateCenter">
+                                <l-tile-layer :url="url" :attribution="attribution"></l-tile-layer>
+                                <l-marker :lat-lng="marker" :icon="icon"></l-marker>
+                            </l-map>
+                        </div>
+                    </div>
+                </div>
+                <div class="row py-3 justify-content-center">
+                    <div class="col col-auto px-5">
+                        <input type="submit" value="保存" class="btn d-block mx-auto d-flex align-items-center btn-primary">
+                    </div>
+                    <div class="col col-auto px-5">
+                    {% if back_url %}
+                        <a href="{{ back_url }}" class="btn btn-secondary">戻る</a>
+                    {% else %}
+                        <a href="{% url 'property_building' data.oid %}?page=map_page" class="btn btn-secondary">戻る</a>
+                    {% endif %}
+                    </div>
+                </div>
+
+            </form>
+        </div>
+    {% endblock %}
+
+    {% block footer %}{% endblock %}
+
+    {% block page_bottom %}
+        <link rel="stylesheet" href="{% static 'lib/leaflet/leaflet.css' %}" />
+        <script src="{% static 'lib/leaflet/leaflet.js' %}"></script>
+        <script src="{% static 'lib/vue2-leaflet/vue2-leaflet.min.js' %}"></script>
+        <script type="text/javascript" src="{% static 'property/js/edit_building_latlng.js' %}"></script>
+        <script type="text/javascript">
+            var app = createBuildingLatLngVue(
+                {{ lat }},
+                {{ lng }},
+            );
+        </script>
+    {% endblock %}

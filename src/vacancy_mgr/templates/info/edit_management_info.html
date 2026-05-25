@@ -1,0 +1,87 @@
+{% extends 'vacancy_mgr/base.html' %}
+{% load static %}
+{% load humanize %}
+
+    {% block head_title %}管理お知らせ情報{% endblock %}
+    {% block head %}
+        <link rel="stylesheet" href="{% static 'info/css/style.css' %}">
+    {% endblock %}
+
+    {% block page_top %}{% endblock %}
+
+    {% block header %}{% endblock %}
+
+    {% block h1_title %}【管理お知らせ情報】{% endblock %}
+
+    {% block contents %}
+        <div id="data-form">
+        {% if back_url %}
+            <form action="{% url 'info_edit_management_info' info.idb64 %}?back_url={{ escaped_back_url }}" method="post" enctype="multipart/form-data">
+        {% else %}
+            <form action="{% url 'info_edit_management_info' info.idb64 %}" method="post" enctype="multipart/form-data">
+        {% endif %}
+                {% csrf_token %}
+                {% if form.errors %}
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <p>*&nbsp;{{ field.label }} : {{ error }}</p>
+                        {% endfor %}
+                     {% endfor %}
+                {% endif %}
+                <div class="row py-1">
+                    <div class="col col-3 col-md-2 col-form-label text-end"><label>管理お知らせID</label></div>
+                    <div class="col col-auto col-form-label">{{ info.id }}</div>
+                </div>
+                <div class="row py-1">
+                    <div class="col col-3 col-md-2 col-form-label text-end"><label>お知らせ内容</label></div>
+                    <div class="col container-fluid">{{ form.information }}</div>
+                </div>
+                <div class="row py-1">
+                    <div class="col col-3 col-md-2 col-form-label text-end"><label>優先順:</label></div>
+                    <div class="col col-auto">{{ form.priority }}</div>
+                    <div class="col col-auto col-form-label text-center">{{ form.is_emphasized }}<label class="form-check-label">{{form.is_emphasized.label}}</label></div>
+                </div>
+                <div class="row py-1">
+                    <div class="col col-2 col-form-label text-end"><label>公開日</label></div>
+                    <div class="col col-auto">{{ form.start_date }}</div>
+                    <div class="col col-auto col-form-label text-end"><label>終了日</label></div>
+                    <div class="col col-auto">{{ form.end_date }}</div>
+                </div>
+                <div class="row py-1">
+                    <div class="col col-3 col-md-2 col-form-label text-end"><label>リンクURL:</label></div>
+                    <div class="col container-fluid">{{ form.link_url }}</div>
+                </div>
+                <div class="row py-1">
+                    <div class="col col-3 col-md-2 col-form-label text-end"><label>登録情報</label></div>
+                    <div class="col col-auto col-form-label">
+                        <div>
+                            <label>登録日時:</label>{{ info.created_at }}
+                            <label>登録ユーザ:</label>{{ info.created_user }}
+                        </div>
+                        <div>
+                            <label>更新日時:</label>{{ info.updated_at }}
+                            <label>更新ユーザ:</label>{{ info.updated_user }}
+                        </div>
+                    </div>
+                </div>
+                <div class="row py-3">
+                    <div class="col col-2"></div>
+                    <div class="col col-4">
+                        <input type="submit" value="保存" class="btn d-block mx-auto d-flex align-items-center btn-primary">
+                    </div>
+                    <div class="col col-4">
+                    {% if back_url %}
+                        <a href="{{ back_url }}" class="btn btn-secondary">戻る</a>
+                    {% else %}
+                        <input type="button" value="閉じる" onclick="window.close();" class="btn d-block mx-auto d-flex align-items-center btn-secondary">
+                    {% endif %}
+                    </div>
+                    <div class="col col-2"></div>
+                </div>
+            </form>
+        </div>
+    {% endblock %}
+
+    {% block footer %}{% endblock %}
+
+    {% block page_bottom %}{% endblock %}
