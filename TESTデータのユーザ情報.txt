@@ -1,4 +1,4 @@
-【システムユーザ】
+【VasyworksDB】
 （ルートユーザ）Django Admin用
 ID: root
 PWD: root1234
@@ -6,6 +6,8 @@ is_company: ×
 is_company_admin: ×
 
 
+
+【VasyworksMGR/VasyworksSEARCH】
 （システム管理者）
 ID: Administrator
 PWD: guest1234
@@ -28,11 +30,12 @@ is_company_admin: ×
 
 
 
-【空室情報ユーザ】
+【VasyworksLIST】
 （管理部署用）
 ID: yworks
 PWD: guest1234
 閲覧レベル: 無制限
+
 
 （仲介業者）
 ID: a-pool
