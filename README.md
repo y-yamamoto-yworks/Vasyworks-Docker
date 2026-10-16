@@ -56,9 +56,9 @@ Vasyworks（賃貸管理システム）をローカル環境で瞬時に構築�
 📄 ライセンス・免責事項
 本システムはオープンソースとして提供されます。ポータルデータ連携機能などの特定のロジックは、必要に応じて拡張可能な設計（Possible Expansion）としています。利用に際しては各プロジェクトのライセンスをご確認ください。
 
-* **VasyworksDB**: AGPLv3.0（テーブル設計も含む）
-* **VasyworksMGR**: AGPLv3.0
-* **VasyworksLIST**: AGPLv3.0
-* **VasyworksAPI**: AGPLv3.0
-* **VasyworksSEARCH**: AGPLv3.0
+* **VasyworksDB**: AGPLv3.0（追加例外条項付き）：テーブル設計も含む
+* **VasyworksMGR**: AGPLv3.0（追加例外条項付き）
+* **VasyworksLIST**: AGPLv3.0（追加例外条項付き）
+* **VasyworksAPI**: AGPLv3.0（追加例外条項付き）
+* **VasyworksSEARCH**: AGPLv3.0（追加例外条項付き）
 
